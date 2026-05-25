@@ -5,11 +5,13 @@
 
 ## Abstract
 
-Raw revenue numbers are a starting point, not the finish line. The real question is always *why* — why did sales spike in June? Why are certain products consistently underperforming? Why is one small group of customers driving the bulk of revenue?
+Numbers don't explain themselves. Knowing total revenue was $29.4M is useful, sure — but it doesn't tell you *why* June outperformed every other month, or why a handful of customers seem to account for a wildly disproportionate chunk of that figure, or why some products just keep declining no matter what.
 
-This project is Part 2 of a two-part SQL analytics series built on a real e-commerce dataset. After wrapping up the data cleanup and exploratory analysis in Part 1, this phase goes deeper — tracking how performance shifts over time, segmenting customers and products based on actual behavior, evaluating which product categories are carrying the business, and packaging everything into two production-ready SQL Views that any analyst or BI tool can plug into directly.
+That's what this project is about.
 
-The goal is to move past surface-level metrics and build queries that surface decisions, not just data.
+This is Part 2 of a two-part SQL analytics series on an e-commerce dataset. Part 1 handled the messy stuff — cleaning the data, setting up the Gold Layer tables, running exploratory analysis to get baseline numbers. This phase picks up from there and goes deeper: tracking trends over time, segmenting customers and products by actual behavior, figuring out which categories are carrying the business, and wrapping it all up in two SQL Views built for real, ongoing use.
+
+Less "here are some numbers," more "here's what's actually going on."
 
 ---
 
@@ -17,30 +19,32 @@ The goal is to move past surface-level metrics and build queries that surface de
 
 ### 1.1 Background
 
-Part 1 gave us the foundation: **$29,356,250 in total revenue**, **27,659 orders**, and **18,484 unique customers**. Those numbers set the baseline. This project is about understanding what's underneath them.
+Coming out of Part 1, the baselines were clear: **$29,356,250 in total revenue**, **27,659 orders**, **18,484 unique customers**. Good to know. But baseline numbers are just the starting point — they tell you where you are, not how you got there or where you're headed.
 
-We want to know how revenue is shifting month to month, which products are gaining ground versus losing it, and how customer spending is evolving over time. More importantly, we need to break the customer base apart — separating first-time buyers from the small, high-value group that keeps the business running.
+The next step was digging into the patterns underneath. How does revenue move month to month? Which products are actually growing vs. slowly dying? Are we acquiring new customers, retaining existing ones, or both? And most importantly — who are the customers actually driving revenue, and how are we treating them?
+
+Those are the questions this project answers.
 
 ### 1.2 Problem Statement
 
-Using the same Gold Layer e-commerce dataset, this project tackles five core operational questions:
+Working with the same Gold Layer e-commerce dataset, the analysis tackles five core questions:
 
-- How is sales volume changing over time, and are there clear seasonal patterns we can plan around?
-- What does the long-term revenue trajectory look like, and is average pricing moving up or down across years?
-- Which products are beating their historical averages, and how do they stack up against their own prior year numbers?
-- How are customers and products distributed across meaningful behavioral segments?
-- Which product categories are actually driving revenue, and what's their precise share of the total?
+- How is sales volume shifting over time, and are there seasonal patterns consistent enough to plan around?
+- What does the long-term revenue trajectory look like when you stack it cumulatively — and is average pricing going up or down?
+- Which products are beating their own historical averages, and how do they compare to where they were a year ago?
+- How are customers and products distributed when you group them by actual behavior rather than surface-level attributes?
+- Which product categories are driving revenue, and by exactly how much?
 
 ### 1.3 Research Objectives
 
-To answer these questions, the analysis moves through six progressive steps:
+Six steps to get there:
 
-1. Identify monthly sales trends and surface any recurring seasonal demand patterns.
-2. Build running totals and moving averages to evaluate long-term revenue growth.
-3. Use the `LAG()` window function to benchmark each product against its own prior year results.
-4. Segment the customer base into VIP, Regular, and New tiers based on total spend and how long they've been buying.
-5. Calculate the precise revenue contribution of each product category.
-6. Package all of this into two clean, production-ready SQL Views built for ongoing business intelligence use.
+1. Pull monthly sales trends and look for recurring seasonal demand patterns.
+2. Build running totals and moving averages to track long-term revenue growth.
+3. Use `LAG()` to benchmark each product's current year against its prior year performance.
+4. Segment the customer base — VIP, Regular, New — based on spend and tenure.
+5. Calculate each product category's exact percentage contribution to total revenue.
+6. Package the whole thing into two reusable SQL Views for ongoing BI use.
 
 ---
 
@@ -48,47 +52,47 @@ To answer these questions, the analysis moves through six progressive steps:
 
 ### 2.1 Dataset
 
-The analysis runs on the same Gold Layer tables built in Part 1:
+Same three Gold Layer tables from Part 1:
 
 | File | Description |
 |---|---|
-| `gold.dim_customers.csv` | Customer demographic records and details |
-| `gold.dim_products.csv` | Product catalog with categories, subcategories, and costs |
-| `gold.fact_sales.csv` | Granular transaction records — orders, quantities, and sales amounts |
+| `gold.dim_customers.csv` | Customer demographic records |
+| `gold.dim_products.csv` | Product catalog — categories, subcategories, costs |
+| `gold.fact_sales.csv` | Transaction-level records — orders, quantities, sales amounts |
 
 ### 2.2 Analytical Approach
 
-| Technique | Application |
+| Technique | What it does |
 |---|---|
-| Change Over Time Analysis | Tracking how performance shifts across months and years |
-| Cumulative Analysis | Monitoring lifetime running totals and moving average prices |
-| Performance Analysis | Year-over-Year (YoY) benchmarking using analytical functions |
-| Data Segmentation | Categorizing customers and products into behavioral brackets |
-| Part-to-Whole Analysis | Calculating precise revenue share by category and product line |
-| Business Reporting | Building reusable SQL Views optimized for BI tool connections |
+| Change Over Time Analysis | Tracks performance shifts across months and years |
+| Cumulative Analysis | Builds lifetime running totals and moving average prices |
+| Performance Analysis | Year-over-Year benchmarking with analytical functions |
+| Data Segmentation | Groups customers and products into behavioral brackets |
+| Part-to-Whole Analysis | Calculates each category's share of total revenue |
+| Business Reporting | Packages insights into reusable SQL Views for BI connections |
 
 ### 2.3 Project Scripts
 
-| Script | Focus Area |
+| Script | What it covers |
 |---|---|
-| `01_change_over_time_analysis.sql` | Monthly sales, order volumes, and active customer trends |
-| `02_cumulative_analysis.sql` | Running revenue totals and pricing trend tracking |
-| `03_performance_analysis.sql` | YoY product benchmarking using `LAG()` |
-| `04_data_segmentation.sql` | Customer tier grouping and product cost range segmentation |
-| `05_part_to_whole_analysis.sql` | Revenue distribution across product categories |
+| `01_change_over_time_analysis.sql` | Monthly sales, order counts, active customer trends |
+| `02_cumulative_analysis.sql` | Running revenue totals and pricing trajectory |
+| `03_performance_analysis.sql` | YoY product benchmarking via `LAG()` |
+| `04_data_segmentation.sql` | Customer tiers + product cost range grouping |
+| `05_part_to_whole_analysis.sql` | Revenue breakdown by product category |
 | `06_report_customers.sql` | Consolidated customer profile view |
 | `07_report_products.sql` | Consolidated product performance view |
 
-> 💡 Fully commented SQL scripts live in the [`/scripts`](./scripts/) folder. The code snippets in this README highlight the core logic of each phase.
+> 💡 All scripts are fully commented and stored in the [`/scripts`](./scripts/) folder. The snippets in this README show the core logic — not the full files.
 
 ### 2.4 Tools & SQL Techniques
 
-- **SQL Server (T-SQL) & SSMS** — Main query environment for writing and optimizing the analytics code.
-- **Common Table Expressions (CTEs)** — Used to break complex joins and transformations into readable, modular steps.
-- **Window Functions (`SUM OVER`, `AVG OVER`, `LAG`, `RANK`)** — Used for running calculations, lag-based comparisons, and product ranking without collapsing rows.
-- **Conditional Logic (`CASE WHEN`)** — Used to build custom segmentation brackets for pricing tiers and customer loyalty levels.
-- **Date Parsing (`DATETRUNC`, `DATEPART`)** — Used to roll daily transaction logs up into meaningful monthly and annual blocks.
-- **SQL Views** — Used to save complex queries as virtual tables, making the final datasets directly queryable from Power BI, Tableau, or any other BI tool.
+- **SQL Server (T-SQL) & SSMS** — main query environment throughout
+- **CTEs** — kept the complex joins and transformations readable and modular
+- **Window Functions (`SUM OVER`, `AVG OVER`, `LAG`, `RANK`)** — running totals, moving averages, year-over-year comparisons without collapsing rows
+- **`CASE WHEN`** — custom segmentation logic for both customer tiers and product cost brackets
+- **`DATETRUNC`, `DATEPART`** — rolled daily transactions into monthly and annual aggregates
+- **SQL Views** — saved the final queries as virtual tables so they can be queried directly from Power BI, Tableau, or wherever
 
 ---
 
@@ -97,7 +101,7 @@ The analysis runs on the same Gold Layer tables built in Part 1:
 ### 3.1 Change Over Time Analysis
 📄 *Script: `01_change_over_time_analysis.sql`*
 
-**Objective:** Track monthly sales volumes, order counts, and active customer numbers to understand how the store's performance moves across the calendar year.
+**Objective:** Look at how monthly sales volume, order counts, and active customers shift across the calendar — basically, figure out if there's a pattern to when the business does well and when it doesn't.
 
 ```sql
 -- Tracking Monthly Sales Trends
@@ -127,20 +131,20 @@ ORDER BY FORMAT(order_date, 'yyyy-MMM');
 
 ![Change Over Time Result](images/01_change_over_time_result.PNG)
 
-**What this revealed:**
+**Findings:**
 
-The timeline opens in December 2010 with modest numbers — **$43,419 in sales**, **14 unique customers**, and **14 units sold**. From there, things moved fast.
+The dataset starts in December 2010 — small numbers, just **$43,419 in sales**, 14 customers, 14 units. Not a lot to work with. But January 2011 jumps straight to **$469,795** across **144 active customers**, which is a pretty sharp early ramp.
 
-By **January 2011**, the business had already accelerated to **$469,795 in revenue** across **144 active customers** — a clear signal of rapid early expansion. Growth kept building through the first half of the year, reaching a peak in **June 2011** with **$737,793 in revenue** and **230 active customers**.
+From there it keeps climbing through the first half of 2011, peaking in June at **$737,793 in revenue** with **230 active customers**.
 
-One pattern stands out clearly: customer activity tracks almost directly with revenue. This tells us that sales volume is being driven by how many buyers are active in a given month, not by erratic swings in individual order sizes.
+The thing that stood out most: customer count and revenue move almost in lockstep. That's telling — it means volume changes are being driven by how many buyers are active in a given month, not by big swings in individual order size. Acquire more buyers in a month, revenue goes up. Simple, but important to confirm.
 
 ---
 
 ### 3.2 Cumulative Analysis
 📄 *Script: `02_cumulative_analysis.sql`*
 
-**Objective:** Build a running total of revenue over time and track how average pricing evolves across years — giving a long-term view of both growth trajectory and pricing trends.
+**Objective:** Build a running total to see revenue stacking up over time, and layer in a moving average price to catch any long-term pricing drift.
 
 ```sql
 SELECT
@@ -163,18 +167,18 @@ FROM (
 
 ![Cumulative Analysis Result](images/02_cumulative_result.PNG)
 
-**What this revealed:**
+**Findings:**
 
-The running total tells the growth story in a single column — revenue compounding year after year from **$43,419** at the start all the way through to **$29,351,258** by 2014. Each year's contribution is visible, and the trajectory is consistently upward.
+Revenue goes from **$43,419** (2010) to a cumulative **$29,351,258** by 2014. The growth is real and consistent — each year adds a meaningful chunk on top of the last.
 
-The moving average price adds a second dimension: it's been declining year over year, dropping from **$3,101** in 2010 to **$1,668** by 2014. This signals a gradual shift toward lower average transaction values over time — something that deserves attention in any pricing strategy conversation.
+The moving average price is the more interesting signal here, honestly. It drops from **$3,101** in 2010 down to **$1,668** by 2014 — a pretty steady decline. That's worth paying attention to. It could mean lower-priced products are gaining share, or that the customer mix is shifting toward buyers spending less per transaction. Either way, it's not a number to ignore.
 
 ---
 
 ### 3.3 Performance Analysis — Year-over-Year
 📄 *Script: `03_performance_analysis.sql`*
 
-**Objective:** Benchmark each product's annual sales against both its historical average and its prior year numbers — surfacing consistent growers, steady decliners, and volatile performers.
+**Objective:** Benchmark each product's annual sales against its own historical average and against its numbers from the prior year — so you can actually see which products are trending up, which are trending down, and which are just coasting.
 
 ```sql
 WITH yearly_product_sales AS (
@@ -214,20 +218,25 @@ ORDER BY product_name, order_year;
 
 ![Performance Analysis Result](images/03_performance_result.PNG)
 
-**What this revealed:**
+**Findings:**
 
-This query does two things at once that would normally require separate analyses.
+This one ended up being more useful than I expected, mostly because of how two signals work together.
 
-The **Above Avg / Below Avg** column immediately flags which products are punching above their own historical weight and which are dragging below it. The **Increase / Decrease / No Change** column adds a second layer — showing not just where a product stands historically, but whether it's actively improving or declining right now.
+The **Above Avg / Below Avg** flag shows how a product is doing relative to its own history. The **Increase / Decrease** flag shows whether it's improving or declining right now compared to last year. Cross those two and you get something actually actionable — four buckets that each tell a different story:
 
-Together, these two signals make it possible to segment products into four distinct groups: consistent growers (Above Avg + Increase), recovering products (Below Avg + Increase), fading products (Above Avg + Decrease), and chronic underperformers (Below Avg + Decrease). Each group calls for a different business response.
+- **Above Avg + Increase** → consistently strong and still growing. These are your winners.
+- **Below Avg + Increase** → underperforming historically but recovering. Worth watching.
+- **Above Avg + Decrease** → has historically done well but slipping. Early warning sign.
+- **Below Avg + Decrease** → chronic underperformers heading further down. These need a decision.
+
+Most of the products in the dataset cluster toward the extremes — either clearly doing well or clearly not. Not a lot of ambiguous middle ground.
 
 ---
 
 ### 3.4 Data Segmentation
 📄 *Script: `04_data_segmentation.sql`*
 
-**Objective:** Group customers into meaningful behavioral tiers — VIP, Regular, and New — based on their spending and how long they've been buying. Segment products into cost ranges for pricing and inventory analysis.
+**Objective:** Split customers into VIP, Regular, and New groups based on how long they've been buying and how much they've spent. Do the same for products by cost range.
 
 ```sql
 -- Product Cost Segmentation
@@ -282,18 +291,20 @@ ORDER BY total_customers DESC;
 
 ![Customer Segmentation Result](images/04_segmentation_result.PNG)
 
-**What this revealed:**
+**Findings:**
 
-The customer split is stark: **14,631 New customers**, **2,198 Regular**, and **1,655 VIP**. The VIP group — customers with at least 12 months of history and over $5,000 in total spend — is a small fraction of the total base, but almost certainly accounts for a disproportionate share of revenue. That concentration matters enormously for retention strategy.
+The customer breakdown: **14,631 New**, **2,198 Regular**, **1,655 VIP**.
 
-On the product side, the majority of SKUs sit **Below 100** in cost (110 products) or in the **100–500** range (101 products), with a smaller group of higher-cost items in the **500–1000** (45 products) and **Above 1000** (39 products) tiers. Each cost bracket behaves differently in terms of pricing sensitivity, margin, and inventory planning.
+That VIP number — 1,655 customers out of 18,484 total — is small. Less than 9% of the customer base. But customers with 12+ months of history and $5,000+ in total spend almost certainly account for a much bigger slice of that $29.4M than their headcount suggests. That gap between size and contribution is exactly the kind of thing that should drive retention decisions.
+
+On the product side, most SKUs are either under $100 (110 products) or in the $100–$500 range (101 products). The higher-cost tiers are smaller — 45 products in the $500–$1,000 range and 39 above $1,000. Those high-cost products don't need to move many units to matter; they need different inventory logic and different margin expectations than the bulk of the catalog.
 
 ---
 
 ### 3.5 Part-to-Whole Analysis
 📄 *Script: `05_part_to_whole_analysis.sql`*
 
-**Objective:** Quantify exactly how much each product category contributes to overall revenue — turning gut-feel assumptions into precise, defensible percentages.
+**Objective:** Calculate exactly what share of total revenue each product category is responsible for.
 
 ```sql
 WITH category_sales AS (
@@ -317,23 +328,24 @@ ORDER BY total_sales DESC;
 
 ![Part to Whole Analysis Result](images/05_part_to_whole_result.PNG)
 
-**What this revealed:**
+**Findings:**
 
-The numbers here speak for themselves: **Bikes account for 96.46% of all revenue** — $28,316,272 out of $29,356,250. Accessories contribute just **2.39%** and Clothing **1.16%**.
+Bikes: **96.46%** of total revenue. $28,316,272 out of $29,356,250.
 
-This confirms the concentration signal from Part 1 and puts a hard number on it. For any serious business planning conversation — whether about diversification, risk management, or growth strategy — this is the most important figure in the entire analysis.
+Accessories: **2.39%**. Clothing: **1.16%**.
+
+Part 1 hinted at this concentration — this query just made the number exact. Nearly all of this business's revenue lives in one category. That's not inherently a problem, but it does mean that anything that disrupts bike sales — supply issues, market shifts, new competition — hits the entire business almost immediately. There's very little buffer.
 
 ---
 
 ### 3.6 Production Reports — SQL Views
 📄 *Scripts: `06_report_customers.sql`, `07_report_products.sql`*
 
-**Objective:** Consolidate all customer and product metrics into two production-ready SQL Views — reusable, queryable, and built for ongoing business intelligence use.
+**Objective:** Take all the metrics built across the previous analyses and consolidate them into two SQL Views — one for customers, one for products — that can be queried directly without rebuilding anything.
 
-**The Customer Report View (`gold.report_customers`) delivers:**
+**Customer Report View (`gold.report_customers`):**
 
 ```sql
--- Key metrics from the Customer Report View
 CASE
     WHEN lifespan >= 12 AND total_sales > 5000 THEN 'VIP'
     WHEN lifespan >= 12 AND total_sales <= 5000 THEN 'Regular'
@@ -354,12 +366,11 @@ CASE WHEN lifespan = 0 THEN total_sales
 END AS avg_monthly_spend
 ```
 
-Each customer record includes: segment classification (VIP, Regular, New), age group, total orders, total sales, total quantity, products purchased, months since last order (recency), Average Order Value (AOV), and Average Monthly Spend.
+Each row in this view gives you: segment (VIP/Regular/New), age group, total orders, total sales, total quantity, products purchased, months since last order, Average Order Value, and Average Monthly Spend.
 
-**The Product Report View (`gold.report_products`) delivers:**
+**Product Report View (`gold.report_products`):**
 
 ```sql
--- Key metrics from the Product Report View
 CASE
     WHEN total_sales > 50000 THEN 'High-Performer'
     WHEN total_sales >= 10000 THEN 'Mid-Range'
@@ -375,7 +386,7 @@ CASE
 END AS avg_monthly_revenue
 ```
 
-Each product record includes: performance tier (High-Performer, Mid-Range, Low-Performer), total orders, total sales, total quantity, unique customers reached, months since last sale (recency), Average Order Revenue (AOR), and Average Monthly Revenue.
+Each row gives you: performance tier (High-Performer/Mid-Range/Low-Performer), total orders, total sales, total quantity, unique customers, months since last sale, Average Order Revenue, and Average Monthly Revenue.
 
 **Customer Report Result:**
 
@@ -389,59 +400,59 @@ Each product record includes: performance tier (High-Performer, Mid-Range, Low-P
 
 ## Section 4 — Key Findings
 
-- **Sales follow a clear seasonal pattern** — certain months consistently outperform others, giving a reliable basis for demand forecasting and inventory planning ahead of peak periods rather than reacting to them.
+- **Sales are seasonal and the pattern is consistent** — certain months reliably outperform others across the full 37-month range, which means there's enough signal here to actually plan around rather than just react to.
 
-- **Revenue trajectory is cumulative and growing** — the running total confirms steady business growth across the full 37-month time range, with each year stacking meaningfully on the last.
+- **Revenue growth is real and cumulative** — the running total goes from $43K in late 2010 to $29.35M by end of 2014. Each year stacks meaningfully on the last.
 
-- **Product performance is polarized** — the YoY analysis surfaces clear winners (consistently Above Average and growing) and clear underperformers (consistently Below Average and declining), with a smaller middle group of stable performers.
+- **Average transaction value is declining** — moving average price dropped from $3,101 in 2010 to $1,668 by 2014. Worth digging into whether that's a product mix issue or a customer mix issue.
 
-- **VIP customers are the revenue backbone** — just 1,655 customers with 12+ months of history and $5,000+ in total spend are almost certainly driving a disproportionate share of the total $29.4M in revenue.
+- **Product performance is polarized** — the YoY analysis doesn't show much middle ground. Products are either consistently strong or consistently struggling, with relatively few in genuine transition.
 
-- **Bike category dominance is confirmed at ~96.46%** — the part-to-whole analysis puts a precise, defensible number on the concentration that was visible in Part 1.
+- **1,655 VIP customers are probably carrying a huge share of $29.4M** — that's a small group to be this dependent on.
 
-- **The Mountain-200 product line is the commercial engine** — consistently Above Average and growing year over year across multiple size and color variants.
+- **Bikes are 96.46% of revenue.** Accessories and Clothing are essentially rounding errors right now.
 
-- **Two production SQL Views are ready for deployment** — `report_customers` and `report_products` serve as reusable intelligence layers that any analyst, manager, or BI tool can query directly without rebuilding the underlying logic.
+- **The Mountain-200 line shows up consistently as a top performer** — across multiple variants, it's Above Average and growing year over year.
+
+- **Two production SQL Views are built and ready** — `report_customers` and `report_products` can be queried directly or connected to any BI tool without rebuilding the logic.
 
 ---
 
 ## Section 5 — Recommendations
 
-**1. Build a VIP Retention Program Immediately**
+**1. Protect the VIP customers — seriously**
 
-The segmentation confirms what most businesses suspect but rarely quantify: a small group of buyers carries the revenue. At just 1,655 customers out of 18,484, the VIP segment is too important to leave to chance. A dedicated retention program — exclusive offers, early product access, personalized outreach — should be the top commercial priority. Losing a VIP customer isn't a customer service issue; it's a revenue event.
+1,655 VIP customers out of 18,484 total is a pretty concentrated revenue base. A dedicated retention effort — exclusive early access, personalized outreach, loyalty incentives — isn't just nice to have here. Losing even a portion of that group is a material revenue event, not just a churn stat.
 
-**2. Re-Engage or Discontinue Declining Products**
+**2. Make a call on the declining products**
 
-The YoY analysis identifies products that are consistently Below Average and continuing to decline. Each one deserves a deliberate decision: reprice, reposition, promote, or discontinue. Carrying underperforming SKUs has a real cost — in inventory, in margin, and in the management attention it consumes.
+The YoY analysis flags which products are consistently Below Average and still dropping. At some point "monitoring" isn't a strategy. Each of those products needs an actual decision: reprice it, reposition it, run a promotion, or pull it. Leaving underperformers in the catalog has real carrying costs — in inventory, in margin, and in the bandwidth it takes to manage them.
 
-**3. Plan Inventory Around Seasonal Peaks**
+**3. Get ahead of the seasonal peaks**
 
-The change over time analysis reveals predictable seasonal patterns across the 37-month dataset. Inventory and staffing decisions should be made ahead of peak months, not in response to them. The data provides the signal — the business just needs to act on it before the peak arrives.
+The demand patterns are clear enough to plan around. Inventory builds and staffing decisions should be happening a few months before the peaks, not during them. The data already shows when those peaks tend to hit.
 
-**4. Diversify Revenue Beyond Bikes**
+**4. Start building revenue outside Bikes**
 
-With 96.46% of revenue sitting in a single product category, this business carries significant concentration risk. A deliberate strategy to grow Accessories and Clothing — even to 10–15% of total revenue — would meaningfully reduce commercial exposure and open new growth levers.
+96.46% in one category is a real concentration risk. It doesn't have to flip overnight — even getting Accessories and Clothing to a combined 10–15% of revenue would materially reduce the business's exposure to anything that disrupts bike sales. That's a longer-term play, but it starts with deciding to prioritize it.
 
-**5. Connect the SQL Views to a BI Tool**
+**5. Connect the Views to a BI tool**
 
-The `report_customers` and `report_products` views aren't one-time outputs — they're living intelligence layers. Connecting them to Power BI, Tableau, or any BI platform would transform this SQL project into an always-on business monitoring system. The complex logic is already built. The only remaining step is the connection.
+The `report_customers` and `report_products` views aren't one-off outputs. They're built to stay current and be queried repeatedly. Hooking them up to Power BI or Tableau would turn this project into an ongoing monitoring system rather than a static analysis. The SQL logic is done — the connection is the easy part.
 
 ---
 
 ## Section 6 — Conclusion
 
-The difference between data and intelligence is structure.
+There's a version of this project that stops at "we made $29.4M across 27,659 orders." That version isn't very useful.
 
-This project takes the same $29.4M e-commerce dataset from Part 1 and applies five layers of analysis — trends, cumulative growth, year-over-year performance, behavioral segmentation, and revenue contribution — to produce findings that are specific, actionable, and ready to inform real decisions.
+This one goes further. Five layers of SQL analysis — trends, cumulative growth, year-over-year performance, behavioral segmentation, and revenue share — on the same dataset, building toward a picture that's actually specific enough to act on.
 
-What emerged is a clear commercial picture: a business built almost entirely on Bikes and the Mountain-200 product line, sustained by a small but critical group of VIP customers, with predictable seasonal demand patterns and a long tail of underperforming accessories that deserve a serious review.
+What that picture shows: a business almost entirely dependent on one product category and one product line, sustained by a small group of high-value customers, with predictable seasonal patterns that aren't being fully leveraged, and a long tail of underperforming products that haven't been seriously reviewed.
 
-The two production SQL Views that close out the project are its most tangible deliverable — reusable reports that any analyst, manager, or BI tool can query directly, without rebuilding the underlying logic every time.
+The two SQL Views that wrap up the project are the most practically useful output. Not because they're technically impressive — because they mean the next analyst, manager, or BI dashboard doesn't have to rebuild any of this from scratch. The work is already done. Just connect and query.
 
-Together with Part 1, this project walks through the full analytical lifecycle in SQL: understand the data, explore its structure, extract the patterns, and turn those patterns into decisions.
-
-That's what SQL analytics is for.
+That's the point of building analytics infrastructure instead of one-time reports.
 
 ---
 
@@ -465,4 +476,4 @@ Advanced_SQL_Analytics/
 └── README.md
 ```
 
-> 🔗 This is **Part 2** of a two-part SQL analytics series. For the foundational EDA and database exploration, see [Part 1 — E-Commerce Sales EDA](../EDA_SQL_Project/)
+> 🔗 This is **Part 2** of a two-part SQL analytics series. For the foundational EDA and database setup, see [Part 1 — E-Commerce Sales EDA](https://github.com/DanielSampson/E-Commerce-Sales-EDA-Database-And-Business-Metrics-Exploration-Using-SQL)
